@@ -1,0 +1,102 @@
+@page "/"
+
+@using Aqva_Blazor.Client.Models
+@using Aqva_Blazor.Client.Services
+
+@inject ColumnistService ColumnistService
+
+<PageTitle>Home</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Authors</MudText>
+
+<MudTextField @bind-Value="_searchQuery"
+              Label="Search"
+              Variant="Variant.Outlined"
+              Margin="Margin.Dense"
+              OnBlur="OnSearchQueryChanged"
+              Placeholder="Type to search..."/>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OnSearchButtonClicked"
+           Style="margin-top: 8px; margin-bottom: 8px; margin-left: 8px;">
+    Search
+</MudButton>
+
+@if (_isLoading)
+{
+    <MudProgressCircular Color="Color.Default" Indeterminate="true" Class="my-7"/>
+}
+else
+{
+    <MudTable Items="_columnists" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+        <HeaderContent>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<Columnist, object>(x => x.Name)">Name</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<Columnist, object>(x => x.ArticleTitle)">Article Title</MudTableSortLabel>
+            </MudTh>
+            <MudTh>
+                <MudTableSortLabel SortBy="new Func<Columnist, object>(x => x.PublishDate)">Publish Date</MudTableSortLabel>
+            </MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Article Title">@context.ArticleTitle</MudTd>
+            <MudTd DataLabel="Publish Date">@context.PublishDate</MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new[] { 10, 20, 50 }"
+                           PageSize="pageSize"
+                           PageNumber="currentPage"
+                           OnPageChanged="OnPageChanged"/>
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    private List<Columnist> _columnists = [];
+    private bool _isLoading;
+    private string _searchQuery = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllColumnistsAsync();
+    }
+
+    private async Task OnSearchButtonClicked()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+            await LoadAllColumnistsAsync();
+        else
+            await SearchColumnistsAsync();
+    }
+
+    private async Task OnSearchQueryChanged()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+            await LoadAllColumnistsAsync();
+    }
+
+    private async Task OnPageChanged()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+            await LoadAllColumnistsAsync();
+        else
+            await SearchColumnistsAsync();
+    }
+
+    private async Task LoadAllColumnistsAsync()
+    {
+        _isLoading = true;
+        _columnists = await ColumnistService.LoadAllColumnistsAsync();
+        _isLoading = false;
+    }
+
+    private async Task SearchColumnistsAsync()
+    {
+        _isLoading = true;
+        _columnists = await ColumnistService.SearchColumnistsAsync(_searchQuery);
+        _isLoading = false;
+    }
+
+}
