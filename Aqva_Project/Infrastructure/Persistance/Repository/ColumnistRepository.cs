@@ -162,5 +162,6 @@ public sealed class ColumnistRepository(IConfiguration configuration, Elasticsea
         await elasticClient.ClearScrollAsync(cs => cs.ScrollId(scrollId!));
         
         return columnists.Distinct().ToList();
+        
     }
 }
